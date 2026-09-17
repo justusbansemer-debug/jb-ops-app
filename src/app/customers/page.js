@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { Card, Input, Select, Button } from "@/components/ui";
+import { Card, Input, Select, Button, MobileCard, CardField } from "@/components/ui";
 
 // This runs on the server whenever the "Add Customer" form is submitted.
 async function addCustomer(formData) {
@@ -78,33 +78,50 @@ export default async function CustomersPage() {
           <p className="text-slate-400 text-sm">No customers yet — add your first one above.</p>
         )}
         {!error && customers && customers.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
-                  <th className="py-2 pr-4">Name</th>
-                  <th className="py-2 pr-4">Phone</th>
-                  <th className="py-2 pr-4">Email</th>
-                  <th className="py-2 pr-4">City</th>
-                  <th className="py-2 pr-4">Referral</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customers.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-50">
-                    <td className="py-3 pr-4 font-semibold">
-                      {c.first_name} {c.last_name}
-                      {c.company && <div className="text-xs text-slate-400 font-normal">{c.company}</div>}
-                    </td>
-                    <td className="py-3 pr-4 text-slate-600">{c.phone || "—"}</td>
-                    <td className="py-3 pr-4 text-slate-600">{c.email || "—"}</td>
-                    <td className="py-3 pr-4 text-slate-600">{c.city || "—"}</td>
-                    <td className="py-3 pr-4 text-slate-600">{c.referral_source || "—"}</td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
+                    <th className="py-2 pr-4">Name</th>
+                    <th className="py-2 pr-4">Phone</th>
+                    <th className="py-2 pr-4">Email</th>
+                    <th className="py-2 pr-4">City</th>
+                    <th className="py-2 pr-4">Referral</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {customers.map((c) => (
+                    <tr key={c.id} className="border-b border-slate-50">
+                      <td className="py-3 pr-4 font-semibold">
+                        {c.first_name} {c.last_name}
+                        {c.company && <div className="text-xs text-slate-400 font-normal">{c.company}</div>}
+                      </td>
+                      <td className="py-3 pr-4 text-slate-600">{c.phone || "—"}</td>
+                      <td className="py-3 pr-4 text-slate-600">{c.email || "—"}</td>
+                      <td className="py-3 pr-4 text-slate-600">{c.city || "—"}</td>
+                      <td className="py-3 pr-4 text-slate-600">{c.referral_source || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-100">
+              {customers.map((c) => (
+                <MobileCard
+                  key={c.id}
+                  title={`${c.first_name} ${c.last_name}`}
+                  subtitle={c.company || null}
+                >
+                  <CardField label="Phone" value={c.phone} />
+                  <CardField label="Email" value={c.email} />
+                  <CardField label="City" value={c.city} />
+                  <CardField label="Referral" value={c.referral_source} />
+                </MobileCard>
+              ))}
+            </div>
+          </>
         )}
       </Card>
     </div>
