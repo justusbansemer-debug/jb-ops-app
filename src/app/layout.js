@@ -11,7 +11,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 font-sans">
         <ConditionalNav />
-        <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-8">
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 lg:pb-8">
           {children}
         </main>
       </body>
