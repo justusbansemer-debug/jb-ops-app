@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Select, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
 import DeleteButton from "@/components/DeleteButton";
+import CustomerPicker from "@/components/CustomerPicker";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
@@ -76,22 +77,10 @@ export default async function QuotesPage() {
 
       <Card title="Send a Quote" id="add">
         <form action={addQuote} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <label className="block text-sm">
+          <div className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
-            <select
-              name="customer_id"
-              required
-              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-              <option value="">Select a customer…</option>
-              {(customers || []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.first_name} {c.last_name}
-                  {c.company ? ` (${c.company})` : ""}
-                </option>
-              ))}
-            </select>
-          </label>
+            <CustomerPicker customers={customers} required />
+          </div>
           <Select label="Service Type" name="service_type" options={SERVICE_TYPES} />
           <Input label="Amount ($)" name="amount" type="number" step="0.01" required />
           <Select label="Status" name="status" options={QUOTE_STATUSES} />
