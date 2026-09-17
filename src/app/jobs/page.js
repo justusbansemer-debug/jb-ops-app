@@ -68,7 +68,7 @@ export default async function JobsPage() {
         </p>
       </div>
 
-      <Card title="Schedule a Job">
+      <Card title="Schedule a Job" id="add">
         <form action={addJob} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <label className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
