@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { Card, Input, Button, StatusPill } from "@/components/ui";
+import { Card, Input, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
 
 function paymentStatus(amount, paid) {
   const a = Number(amount || 0);
@@ -108,39 +108,59 @@ export default async function InvoicesPage() {
           <p className="text-slate-400 text-sm">No invoices yet — create your first one above.</p>
         )}
         {!error && invoices && invoices.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
-                  <th className="py-2 pr-4">Date</th>
-                  <th className="py-2 pr-4">Customer</th>
-                  <th className="py-2 pr-4 text-right">Amount</th>
-                  <th className="py-2 pr-4 text-right">Paid</th>
-                  <th className="py-2 pr-4 text-right">Balance</th>
-                  <th className="py-2 pr-4">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((i) => {
-                  const balance = Math.max(Number(i.amount || 0) - Number(i.amount_paid || 0), 0);
-                  return (
-                    <tr key={i.id} className="border-b border-slate-50">
-                      <td className="py-3 pr-4 text-slate-600">{i.invoice_date}</td>
-                      <td className="py-3 pr-4 font-semibold">
-                        {i.customers ? `${i.customers.first_name} ${i.customers.last_name}` : "—"}
-                      </td>
-                      <td className="py-3 pr-4 text-right">${Number(i.amount).toFixed(2)}</td>
-                      <td className="py-3 pr-4 text-right">${Number(i.amount_paid).toFixed(2)}</td>
-                      <td className="py-3 pr-4 text-right font-semibold">${balance.toFixed(2)}</td>
-                      <td className="py-3 pr-4">
-                        <StatusPill status={paymentStatus(i.amount, i.amount_paid)} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
+                    <th className="py-2 pr-4">Date</th>
+                    <th className="py-2 pr-4">Customer</th>
+                    <th className="py-2 pr-4 text-right">Amount</th>
+                    <th className="py-2 pr-4 text-right">Paid</th>
+                    <th className="py-2 pr-4 text-right">Balance</th>
+                    <th className="py-2 pr-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((i) => {
+                    const balance = Math.max(Number(i.amount || 0) - Number(i.amount_paid || 0), 0);
+                    return (
+                      <tr key={i.id} className="border-b border-slate-50">
+                        <td className="py-3 pr-4 text-slate-600">{i.invoice_date}</td>
+                        <td className="py-3 pr-4 font-semibold">
+                          {i.customers ? `${i.customers.first_name} ${i.customers.last_name}` : "—"}
+                        </td>
+                        <td className="py-3 pr-4 text-right">${Number(i.amount).toFixed(2)}</td>
+                        <td className="py-3 pr-4 text-right">${Number(i.amount_paid).toFixed(2)}</td>
+                        <td className="py-3 pr-4 text-right font-semibold">${balance.toFixed(2)}</td>
+                        <td className="py-3 pr-4">
+                          <StatusPill status={paymentStatus(i.amount, i.amount_paid)} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-100">
+              {invoices.map((i) => {
+                const balance = Math.max(Number(i.amount || 0) - Number(i.amount_paid || 0), 0);
+                return (
+                  <MobileCard
+                    key={i.id}
+                    title={i.customers ? `${i.customers.first_name} ${i.customers.last_name}` : "—"}
+                    subtitle={i.invoice_date}
+                    topRight={<StatusPill status={paymentStatus(i.amount, i.amount_paid)} />}
+                  >
+                    <CardField label="Amount" value={`$${Number(i.amount).toFixed(2)}`} />
+                    <CardField label="Paid" value={`$${Number(i.amount_paid).toFixed(2)}`} />
+                    <CardField label="Balance" value={`$${balance.toFixed(2)}`} />
+                  </MobileCard>
+                );
+              })}
+            </div>
+          </>
         )}
       </Card>
     </div>
