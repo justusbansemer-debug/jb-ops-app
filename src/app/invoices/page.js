@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
+import DeleteButton from "@/components/DeleteButton";
 
 function paymentStatus(amount, paid) {
   const a = Number(amount || 0);
@@ -26,6 +28,20 @@ async function addInvoice(formData) {
 
   if (error) {
     console.error("Failed to add invoice:", error.message);
+    return;
+  }
+
+  revalidatePath("/invoices");
+}
+
+async function deleteInvoice(id) {
+  "use server";
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("invoices").delete().eq("id", id);
+
+  if (error) {
+    console.error("Failed to delete invoice:", error.message);
     return;
   }
 
@@ -119,6 +135,7 @@ export default async function InvoicesPage() {
                     <th className="py-2 pr-4 text-right">Paid</th>
                     <th className="py-2 pr-4 text-right">Balance</th>
                     <th className="py-2 pr-4">Status</th>
+                    <th className="py-2 pr-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -135,6 +152,17 @@ export default async function InvoicesPage() {
                         <td className="py-3 pr-4 text-right font-semibold">${balance.toFixed(2)}</td>
                         <td className="py-3 pr-4">
                           <StatusPill status={paymentStatus(i.amount, i.amount_paid)} />
+                        </td>
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center justify-end gap-3">
+                            <Link
+                              href={`/invoices/${i.id}/edit`}
+                              className="text-slate-400 hover:text-orange-600 text-xs font-medium"
+                            >
+                              Edit
+                            </Link>
+                            <DeleteButton action={deleteInvoice} id={i.id} label="invoice" />
+                          </div>
                         </td>
                       </tr>
                     );
@@ -156,6 +184,15 @@ export default async function InvoicesPage() {
                     <CardField label="Amount" value={`$${Number(i.amount).toFixed(2)}`} />
                     <CardField label="Paid" value={`$${Number(i.amount_paid).toFixed(2)}`} />
                     <CardField label="Balance" value={`$${balance.toFixed(2)}`} />
+                    <div className="pt-1 flex items-center gap-4">
+                      <Link
+                        href={`/invoices/${i.id}/edit`}
+                        className="text-slate-400 hover:text-orange-600 text-xs font-medium"
+                      >
+                        Edit
+                      </Link>
+                      <DeleteButton action={deleteInvoice} id={i.id} label="invoice" />
+                    </div>
                   </MobileCard>
                 );
               })}
