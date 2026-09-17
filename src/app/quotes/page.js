@@ -74,7 +74,7 @@ export default async function QuotesPage() {
         <div className="text-2xl font-bold mt-2">${pendingValue.toFixed(2)}</div>
       </div>
 
-      <Card title="Send a Quote">
+      <Card title="Send a Quote" id="add">
         <form action={addQuote} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <label className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
