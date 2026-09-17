@@ -125,7 +125,9 @@ export default async function JobsPage() {
                         {j.scheduled_at ? new Date(j.scheduled_at).toLocaleString() : "—"}
                       </td>
                       <td className="py-3 pr-4 font-semibold">
-                        {j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : "—"}
+                        <Link href={`/jobs/${j.id}`} className="hover:text-orange-600">
+                          {j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : "—"}
+                        </Link>
                       </td>
                       <td className="py-3 pr-4 text-slate-600">{j.service_type}</td>
                       <td className="py-3 pr-4 text-slate-600">{j.assigned_employee || "—"}</td>
@@ -156,7 +158,11 @@ export default async function JobsPage() {
               {jobs.map((j) => (
                 <MobileCard
                   key={j.id}
-                  title={j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : "—"}
+                  title={
+                    <Link href={`/jobs/${j.id}`} className="hover:text-orange-600">
+                      {j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : "—"}
+                    </Link>
+                  }
                   subtitle={j.service_type}
                   topRight={<StatusPill status={j.status} />}
                 >
