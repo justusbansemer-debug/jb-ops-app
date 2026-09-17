@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Select, Button, MobileCard, CardField } from "@/components/ui";
+import DeleteButton from "@/components/DeleteButton";
 
 // This runs on the server whenever the "Add Customer" form is submitted.
 async function addCustomer(formData) {
@@ -27,6 +29,20 @@ async function addCustomer(formData) {
   }
 
   // Tells Next.js "the customers page's data changed, show the new list."
+  revalidatePath("/customers");
+}
+
+async function deleteCustomer(id) {
+  "use server";
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("customers").delete().eq("id", id);
+
+  if (error) {
+    console.error("Failed to delete customer:", error.message);
+    return;
+  }
+
   revalidatePath("/customers");
 }
 
@@ -88,6 +104,7 @@ export default async function CustomersPage() {
                     <th className="py-2 pr-4">Email</th>
                     <th className="py-2 pr-4">City</th>
                     <th className="py-2 pr-4">Referral</th>
+                    <th className="py-2 pr-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -101,6 +118,17 @@ export default async function CustomersPage() {
                       <td className="py-3 pr-4 text-slate-600">{c.email || "—"}</td>
                       <td className="py-3 pr-4 text-slate-600">{c.city || "—"}</td>
                       <td className="py-3 pr-4 text-slate-600">{c.referral_source || "—"}</td>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/customers/${c.id}/edit`}
+                            className="text-slate-400 hover:text-orange-600 text-xs font-medium"
+                          >
+                            Edit
+                          </Link>
+                          <DeleteButton action={deleteCustomer} id={c.id} label="customer" />
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -113,11 +141,22 @@ export default async function CustomersPage() {
                   key={c.id}
                   title={`${c.first_name} ${c.last_name}`}
                   subtitle={c.company || null}
+                  topRight={
+                    <Link
+                      href={`/customers/${c.id}/edit`}
+                      className="text-slate-400 hover:text-orange-600 text-xs font-medium"
+                    >
+                      Edit
+                    </Link>
+                  }
                 >
                   <CardField label="Phone" value={c.phone} />
                   <CardField label="Email" value={c.email} />
                   <CardField label="City" value={c.city} />
                   <CardField label="Referral" value={c.referral_source} />
+                  <div className="pt-1">
+                    <DeleteButton action={deleteCustomer} id={c.id} label="customer" />
+                  </div>
                 </MobileCard>
               ))}
             </div>
