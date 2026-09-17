@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { Card, Input, Select, Button, StatusPill } from "@/components/ui";
+import { Card, Input, Select, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
@@ -99,38 +99,58 @@ export default async function QuotesPage() {
           <p className="text-slate-400 text-sm">No quotes yet — send your first one above.</p>
         )}
         {!error && quotes && quotes.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
-                  <th className="py-2 pr-4">Sent</th>
-                  <th className="py-2 pr-4">Customer</th>
-                  <th className="py-2 pr-4">Service</th>
-                  <th className="py-2 pr-4 text-right">Amount</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4">Follow-up</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quotes.map((q) => (
-                  <tr key={q.id} className="border-b border-slate-50">
-                    <td className="py-3 pr-4 text-slate-600">{q.date_sent}</td>
-                    <td className="py-3 pr-4 font-semibold">
-                      {q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
-                    </td>
-                    <td className="py-3 pr-4 text-slate-600">{q.service_type}</td>
-                    <td className="py-3 pr-4 text-right font-semibold">
-                      {q.amount != null ? `$${Number(q.amount).toFixed(2)}` : "—"}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <StatusPill status={q.status} />
-                    </td>
-                    <td className="py-3 pr-4 text-slate-600">{q.follow_up_date || "—"}</td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
+                    <th className="py-2 pr-4">Sent</th>
+                    <th className="py-2 pr-4">Customer</th>
+                    <th className="py-2 pr-4">Service</th>
+                    <th className="py-2 pr-4 text-right">Amount</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2 pr-4">Follow-up</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {quotes.map((q) => (
+                    <tr key={q.id} className="border-b border-slate-50">
+                      <td className="py-3 pr-4 text-slate-600">{q.date_sent}</td>
+                      <td className="py-3 pr-4 font-semibold">
+                        {q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
+                      </td>
+                      <td className="py-3 pr-4 text-slate-600">{q.service_type}</td>
+                      <td className="py-3 pr-4 text-right font-semibold">
+                        {q.amount != null ? `$${Number(q.amount).toFixed(2)}` : "—"}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <StatusPill status={q.status} />
+                      </td>
+                      <td className="py-3 pr-4 text-slate-600">{q.follow_up_date || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-100">
+              {quotes.map((q) => (
+                <MobileCard
+                  key={q.id}
+                  title={q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
+                  subtitle={q.service_type}
+                  topRight={<StatusPill status={q.status} />}
+                >
+                  <CardField label="Sent" value={q.date_sent} />
+                  <CardField
+                    label="Amount"
+                    value={q.amount != null ? `$${Number(q.amount).toFixed(2)}` : null}
+                  />
+                  <CardField label="Follow-up" value={q.follow_up_date} />
+                </MobileCard>
+              ))}
+            </div>
+          </>
         )}
       </Card>
     </div>
