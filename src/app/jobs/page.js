@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { Card, Input, Select, Button, StatusPill } from "@/components/ui";
+import { Card, Input, Select, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
@@ -99,40 +99,63 @@ export default async function JobsPage() {
           <p className="text-slate-400 text-sm">No jobs yet — schedule your first one above.</p>
         )}
         {!error && jobs && jobs.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
-                  <th className="py-2 pr-4">When</th>
-                  <th className="py-2 pr-4">Customer</th>
-                  <th className="py-2 pr-4">Service</th>
-                  <th className="py-2 pr-4">Employee</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4 text-right">Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((j) => (
-                  <tr key={j.id} className="border-b border-slate-50">
-                    <td className="py-3 pr-4 text-slate-600">
-                      {j.scheduled_at ? new Date(j.scheduled_at).toLocaleString() : "—"}
-                    </td>
-                    <td className="py-3 pr-4 font-semibold">
-                      {j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : "—"}
-                    </td>
-                    <td className="py-3 pr-4 text-slate-600">{j.service_type}</td>
-                    <td className="py-3 pr-4 text-slate-600">{j.assigned_employee || "—"}</td>
-                    <td className="py-3 pr-4">
-                      <StatusPill status={j.status} />
-                    </td>
-                    <td className="py-3 pr-4 text-right font-semibold">
-                      {j.price != null ? `$${Number(j.price).toFixed(2)}` : "—"}
-                    </td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
+                    <th className="py-2 pr-4">When</th>
+                    <th className="py-2 pr-4">Customer</th>
+                    <th className="py-2 pr-4">Service</th>
+                    <th className="py-2 pr-4">Employee</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2 pr-4 text-right">Price</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {jobs.map((j) => (
+                    <tr key={j.id} className="border-b border-slate-50">
+                      <td className="py-3 pr-4 text-slate-600">
+                        {j.scheduled_at ? new Date(j.scheduled_at).toLocaleString() : "—"}
+                      </td>
+                      <td className="py-3 pr-4 font-semibold">
+                        {j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : "—"}
+                      </td>
+                      <td className="py-3 pr-4 text-slate-600">{j.service_type}</td>
+                      <td className="py-3 pr-4 text-slate-600">{j.assigned_employee || "—"}</td>
+                      <td className="py-3 pr-4">
+                        <StatusPill status={j.status} />
+                      </td>
+                      <td className="py-3 pr-4 text-right font-semibold">
+                        {j.price != null ? `$${Number(j.price).toFixed(2)}` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-100">
+              {jobs.map((j) => (
+                <MobileCard
+                  key={j.id}
+                  title={j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : "—"}
+                  subtitle={j.service_type}
+                  topRight={<StatusPill status={j.status} />}
+                >
+                  <CardField
+                    label="When"
+                    value={j.scheduled_at ? new Date(j.scheduled_at).toLocaleString() : null}
+                  />
+                  <CardField label="Employee" value={j.assigned_employee} />
+                  <CardField
+                    label="Price"
+                    value={j.price != null ? `$${Number(j.price).toFixed(2)}` : null}
+                  />
+                </MobileCard>
+              ))}
+            </div>
+          </>
         )}
       </Card>
     </div>
