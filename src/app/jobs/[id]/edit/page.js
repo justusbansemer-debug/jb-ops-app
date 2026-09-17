@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Select, Button } from "@/components/ui";
+import CustomerPicker from "@/components/CustomerPicker";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
@@ -68,23 +69,10 @@ export default async function EditJobPage({ params }) {
       <Card>
         <form action={updateJob} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input type="hidden" name="id" value={job.id} />
-          <label className="block text-sm">
+          <div className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
-            <select
-              name="customer_id"
-              required
-              defaultValue={job.customer_id || ""}
-              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-              <option value="">Select a customer…</option>
-              {(customers || []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.first_name} {c.last_name}
-                  {c.company ? ` (${c.company})` : ""}
-                </option>
-              ))}
-            </select>
-          </label>
+            <CustomerPicker customers={customers} defaultCustomerId={job.customer_id} required />
+          </div>
           <Select label="Service Type" name="service_type" defaultValue={job.service_type} options={SERVICE_TYPES} />
           <Input
             label="Scheduled Date & Time"
