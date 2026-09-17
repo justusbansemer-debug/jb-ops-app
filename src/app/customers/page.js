@@ -63,7 +63,7 @@ export default async function CustomersPage() {
         </p>
       </div>
 
-      <Card title="Add a Customer">
+      <Card title="Add a Customer" id="add">
         <form action={addCustomer} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input label="First Name" name="first_name" required />
           <Input label="Last Name" name="last_name" required />
