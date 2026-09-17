@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/app/login/actions";
+import QuickAddButton from "./QuickAddButton";
 
 // The navigation shown on every page except the login screen: a slim top
 // bar everywhere, plus a QuoteIQ-style bottom tab bar on phones/tablets
 // (the horizontal link row moves into the top bar once there's room, on
-// large screens).
+// large screens). The bottom bar also carries a raised "+" quick-add
+// button in the middle, matching the reference layout.
 const links = [
   { href: "/", label: "Dashboard", icon: HomeIcon },
   { href: "/customers", label: "Customers", icon: UsersIcon },
@@ -65,6 +67,21 @@ function InvoiceIcon(props) {
   );
 }
 
+function NavLink({ link, active }) {
+  const Icon = link.icon;
+  return (
+    <Link
+      href={link.href}
+      className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium ${
+        active ? "text-orange-600" : "text-slate-500"
+      }`}
+    >
+      <Icon className={`w-5 h-5 ${active ? "text-orange-600" : "text-slate-400"}`} />
+      {link.label}
+    </Link>
+  );
+}
+
 export default function Nav() {
   const pathname = usePathname();
 
@@ -106,23 +123,13 @@ export default function Nav() {
       </header>
 
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-5">
-          {links.map((l) => {
-            const active = pathname === l.href;
-            const Icon = l.icon;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium ${
-                  active ? "text-orange-600" : "text-slate-500"
-                }`}
-              >
-                <Icon className={`w-5 h-5 ${active ? "text-orange-600" : "text-slate-400"}`} />
-                {l.label}
-              </Link>
-            );
-          })}
+        <div className="grid grid-cols-6">
+          <NavLink link={links[0]} active={pathname === links[0].href} />
+          <NavLink link={links[1]} active={pathname === links[1].href} />
+          <QuickAddButton />
+          <NavLink link={links[2]} active={pathname === links[2].href} />
+          <NavLink link={links[3]} active={pathname === links[3].href} />
+          <NavLink link={links[4]} active={pathname === links[4].href} />
         </div>
       </nav>
     </>
