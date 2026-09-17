@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Select, Button } from "@/components/ui";
+import CustomerPicker from "@/components/CustomerPicker";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
@@ -58,23 +59,10 @@ export default async function EditQuotePage({ params }) {
       <Card>
         <form action={updateQuote} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input type="hidden" name="id" value={quote.id} />
-          <label className="block text-sm">
+          <div className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
-            <select
-              name="customer_id"
-              required
-              defaultValue={quote.customer_id || ""}
-              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-              <option value="">Select a customer…</option>
-              {(customers || []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.first_name} {c.last_name}
-                  {c.company ? ` (${c.company})` : ""}
-                </option>
-              ))}
-            </select>
-          </label>
+            <CustomerPicker customers={customers} defaultCustomerId={quote.customer_id} required />
+          </div>
           <Select label="Service Type" name="service_type" defaultValue={quote.service_type} options={SERVICE_TYPES} />
           <Input label="Amount ($)" name="amount" type="number" step="0.01" defaultValue={quote.amount ?? ""} required />
           <Select label="Status" name="status" defaultValue={quote.status} options={QUOTE_STATUSES} />
