@@ -83,7 +83,7 @@ export default async function InvoicesPage() {
         </div>
       </div>
 
-      <Card title="Create an Invoice">
+      <Card title="Create an Invoice" id="add">
         <form action={addInvoice} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <label className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
