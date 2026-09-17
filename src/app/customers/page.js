@@ -111,7 +111,9 @@ export default async function CustomersPage() {
                   {customers.map((c) => (
                     <tr key={c.id} className="border-b border-slate-50">
                       <td className="py-3 pr-4 font-semibold">
-                        {c.first_name} {c.last_name}
+                        <Link href={`/customers/${c.id}`} className="hover:text-orange-600">
+                          {c.first_name} {c.last_name}
+                        </Link>
                         {c.company && <div className="text-xs text-slate-400 font-normal">{c.company}</div>}
                       </td>
                       <td className="py-3 pr-4 text-slate-600">{c.phone || "—"}</td>
@@ -139,7 +141,7 @@ export default async function CustomersPage() {
               {customers.map((c) => (
                 <MobileCard
                   key={c.id}
-                  title={`${c.first_name} ${c.last_name}`}
+                  title={<Link href={`/customers/${c.id}`} className="hover:text-orange-600">{c.first_name} {c.last_name}</Link>}
                   subtitle={c.company || null}
                   topRight={
                     <Link
