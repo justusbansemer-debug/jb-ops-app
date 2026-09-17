@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Select, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
+import DeleteButton from "@/components/DeleteButton";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
@@ -26,6 +28,20 @@ async function addJob(formData) {
 
   if (error) {
     console.error("Failed to add job:", error.message);
+    return;
+  }
+
+  revalidatePath("/jobs");
+}
+
+async function deleteJob(id) {
+  "use server";
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("jobs").delete().eq("id", id);
+
+  if (error) {
+    console.error("Failed to delete job:", error.message);
     return;
   }
 
@@ -110,6 +126,7 @@ export default async function JobsPage() {
                     <th className="py-2 pr-4">Employee</th>
                     <th className="py-2 pr-4">Status</th>
                     <th className="py-2 pr-4 text-right">Price</th>
+                    <th className="py-2 pr-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,6 +145,17 @@ export default async function JobsPage() {
                       </td>
                       <td className="py-3 pr-4 text-right font-semibold">
                         {j.price != null ? `$${Number(j.price).toFixed(2)}` : "—"}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/jobs/${j.id}/edit`}
+                            className="text-slate-400 hover:text-orange-600 text-xs font-medium"
+                          >
+                            Edit
+                          </Link>
+                          <DeleteButton action={deleteJob} id={j.id} label="job" />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -152,6 +180,15 @@ export default async function JobsPage() {
                     label="Price"
                     value={j.price != null ? `$${Number(j.price).toFixed(2)}` : null}
                   />
+                  <div className="pt-1 flex items-center gap-4">
+                    <Link
+                      href={`/jobs/${j.id}/edit`}
+                      className="text-slate-400 hover:text-orange-600 text-xs font-medium"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteButton action={deleteJob} id={j.id} label="job" />
+                  </div>
                 </MobileCard>
               ))}
             </div>
