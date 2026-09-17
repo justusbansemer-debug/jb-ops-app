@@ -33,9 +33,9 @@ export function StatusPill({ status }) {
   );
 }
 
-export function Card({ title, action, children }) {
+export function Card({ title, action, children, className = "", id }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5">
+    <div id={id} className={`bg-white border border-slate-200 rounded-xl p-4 sm:p-5 ${className}`}>
       {(title || action) && (
         <div className="flex items-center justify-between gap-3 mb-4">
           {title && <h2 className="font-semibold text-lg">{title}</h2>}
