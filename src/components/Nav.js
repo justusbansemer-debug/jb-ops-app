@@ -16,6 +16,7 @@ const links = [
   { href: "/jobs", label: "Jobs", icon: JobsIcon },
   { href: "/quotes", label: "Quotes", icon: QuoteIcon },
   { href: "/invoices", label: "Invoices", icon: InvoiceIcon },
+  { href: "/today", label: "Today", icon: TodayIcon },
 ];
 
 function HomeIcon(props) {
@@ -63,6 +64,16 @@ function InvoiceIcon(props) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z" />
       <path d="M9 8h6M9 12h6M9 16h4" />
+    </svg>
+  );
+}
+
+function TodayIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+      <path d="M8 14l2 2 4-4" />
     </svg>
   );
 }
