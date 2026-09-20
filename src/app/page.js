@@ -108,9 +108,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Welcome, Justus 👋</h1>
-        <p className="text-slate-500 text-sm mt-1">Here&apos;s how the business looks today.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Welcome, Justus 👋</h1>
+          <p className="text-slate-500 text-sm mt-1">Here&apos;s how the business looks today.</p>
+        </div>
+        <Link
+          href="/today"
+          className="shrink-0 bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg whitespace-nowrap"
+        >
+          Today&apos;s Jobs →
+        </Link>
       </div>
 
       {!configured && (
