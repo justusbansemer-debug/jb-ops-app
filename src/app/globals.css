@@ -11,7 +11,47 @@
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
+/* ---------------------------------------------------------------------------
+   App colors.
+
+   The accent is BLUE. Two families:
+     navy-*    the dark blue used for the pills, the raised + button and
+               anything that used to be slate-900 in the chrome.
+     blue-*    the bright accent: buttons, links, active tabs, the chart line.
+
+   The app was originally built with orange-* utility classes spread across
+   ~20 page files. Rather than edit every one of them, Tailwind v4's color
+   variables let us redefine the orange scale as blue right here — so any
+   leftover "text-orange-600" renders blue. New code uses blue and navy.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-navy-50: #f2f6fc;
+  --color-navy-100: #e2eaf7;
+  --color-navy-200: #c7d5ec;
+  --color-navy-500: #34508c;
+  --color-navy-600: #2a4174;
+  --color-navy-700: #21335c;
+  --color-navy-800: #1b2a4e;
+  --color-navy-900: #16233f;
+
+  --color-orange-50: #eff6ff;
+  --color-orange-100: #dbeafe;
+  --color-orange-200: #bfdbfe;
+  --color-orange-300: #93c5fd;
+  --color-orange-400: #60a5fa;
+  --color-orange-500: #3b82f6;
+  --color-orange-600: #2563eb;
+  --color-orange-700: #1d4ed8;
+  --color-orange-800: #1e40af;
+  --color-orange-900: #1e3a8a;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Keeps the drawer/sheet from letting the page scroll behind it. */
+body.no-scroll {
+  overflow: hidden;
 }
