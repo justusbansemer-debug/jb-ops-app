@@ -1,30 +1,15 @@
-import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { Card, Input, Select, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
-import DeleteButton from "@/components/DeleteButton";
+import { Card, Input, Select, Button } from "@/components/ui";
 import CustomerPicker from "@/components/CustomerPicker";
-import ServicePicker from "@/components/ServicePicker";
+import EstimatesView from "@/components/EstimatesView";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
   "Gutter Cleaning", "Gutter Whitening", "Window Cleaning", "Small Commercial",
   "Christmas Lights Install", "Christmas Lights Removal", "Other",
 ];
-const QUOTE_STATUSES = ["Pending", "Accepted", "Declined", "Expired"];
-
-// A one-line read on the estimate link: sent? opened? answered?
-function linkState(q) {
-  if (q.customer_response === "accepted") return "Accepted by customer";
-  if (q.customer_response === "declined") return "Declined by customer";
-  if (q.customer_response === "change_requested") return "Change requested";
-  if (q.first_viewed_at) {
-    const n = Number(q.view_count || 1);
-    return n > 1 ? `Opened ${n}x` : "Opened";
-  }
-  if (q.sent_at) return "Sent, not opened yet";
-  return "Not sent yet";
-}
+const QUOTE_TYPES = ["Standard", "Options"];
 
 async function addQuote(formData) {
   "use server";
@@ -34,8 +19,9 @@ async function addQuote(formData) {
   const { error } = await supabase.from("quotes").insert({
     customer_id: String(formData.get("customer_id") || "") || null,
     service_type: String(formData.get("service_type") || ""),
+    quote_type: String(formData.get("quote_type") || "Standard"),
     amount: Number(formData.get("amount") || 0) || null,
-    status: String(formData.get("status") || "Pending"),
+    status: "Pending",
     follow_up_date: String(formData.get("follow_up_date") || "") || null,
     notes: String(formData.get("notes") || "").trim() || null,
   });
@@ -48,15 +34,159 @@ async function addQuote(formData) {
   revalidatePath("/quotes");
 }
 
-async function deleteQuote(id) {
+// The four colored buttons on each estimate card.
+async function cardAction(formData) {
   "use server";
 
+  const id = String(formData.get("quote_id") || "");
+  const op = String(formData.get("op") || "");
+  if (!id || !op) return;
+
   const supabase = await createClient();
-  const { error } = await supabase.from("quotes").delete().eq("id", id);
+
+  const { data: quote, error: readError } = await supabase
+    .from("quotes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (readError || !quote) {
+    console.error("Estimate action: could not load quote", readError?.message);
+    return;
+  }
+
+  if (op === "schedule") {
+    // Turn the estimate into a scheduled job and remember which job it became.
+    const { data: job, error } = await supabase
+      .from("jobs")
+      .insert({
+        customer_id: quote.customer_id,
+        service_type: quote.service_type,
+        scheduled_at: quote.follow_up_date
+          ? new Date(`${quote.follow_up_date}T09:00:00`).toISOString()
+          : new Date().toISOString(),
+        status: "Scheduled",
+        price: quote.amount,
+        notes: quote.notes,
+      })
+      .select("id")
+      .single();
+
+    if (error || !job) {
+      console.error("Failed to schedule estimate:", error?.message);
+      return;
+    }
+
+    await supabase
+      .from("quotes")
+      .update({ scheduled_job_id: job.id, status: "Accepted" })
+      .eq("id", id);
+
+    await supabase
+      .from("quote_events")
+      .insert({ quote_id: id, event_type: "scheduled" });
+
+    revalidatePath("/quotes");
+    revalidatePath("/jobs");
+    return;
+  }
+
+  if (op === "invoice") {
+    const due = new Date();
+    due.setDate(due.getDate() + 14);
+
+    const { error } = await supabase.from("invoices").insert({
+      customer_id: quote.customer_id,
+      job_id: quote.scheduled_job_id || null,
+      invoice_date: new Date().toISOString().slice(0, 10),
+      due_date: due.toISOString().slice(0, 10),
+      amount: quote.amount || 0,
+      amount_paid: 0,
+      notes: `From estimate #${quote.quote_number ?? ""} — ${quote.service_type || ""}`.trim(),
+    });
+
+    if (error) {
+      console.error("Failed to invoice estimate:", error.message);
+      return;
+    }
+
+    await supabase
+      .from("quote_events")
+      .insert({ quote_id: id, event_type: "invoiced" });
+
+    revalidatePath("/quotes");
+    revalidatePath("/invoices");
+    return;
+  }
+
+  if (op === "decline") {
+    await supabase
+      .from("quotes")
+      .update({ status: "Declined", declined_at: new Date().toISOString() })
+      .eq("id", id);
+
+    await supabase
+      .from("quote_events")
+      .insert({ quote_id: id, event_type: "declined" });
+
+    revalidatePath("/quotes");
+    return;
+  }
+
+  if (op === "paid") {
+    await supabase
+      .from("quotes")
+      .update({ paid_at: new Date().toISOString(), status: "Accepted" })
+      .eq("id", id);
+
+    await supabase
+      .from("quote_events")
+      .insert({ quote_id: id, event_type: "paid" });
+
+    revalidatePath("/quotes");
+    return;
+  }
+}
+
+// "Add Comment" — writes into the same activity log the estimate link uses.
+async function addComment(formData) {
+  "use server";
+
+  const id = String(formData.get("quote_id") || "");
+  const note = String(formData.get("note") || "").trim();
+  if (!id || !note) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("quote_events")
+    .insert({ quote_id: id, event_type: "comment", note: note.slice(0, 2000) });
 
   if (error) {
-    console.error("Failed to delete quote:", error.message);
+    console.error("Failed to add comment:", error.message);
     return;
+  }
+
+  revalidatePath("/quotes");
+}
+
+// Archive / un-archive, one card or a whole selection.
+async function bulkAction(formData) {
+  "use server";
+
+  const ids = String(formData.get("ids") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const op = String(formData.get("op") || "");
+  if (!ids.length) return;
+
+  const supabase = await createClient();
+
+  if (op === "archive" || op === "unarchive") {
+    await supabase
+      .from("quotes")
+      .update({ archived_at: op === "archive" ? new Date().toISOString() : null })
+      .in("id", ids);
   }
 
   revalidatePath("/quotes");
@@ -65,158 +195,52 @@ async function deleteQuote(id) {
 export default async function QuotesPage() {
   const supabase = await createClient();
 
-  const [{ data: quotes, error }, { data: customers }, { data: services }] =
-    await Promise.all([
-      supabase
-        .from("quotes")
-        .select("*, customers(first_name, last_name, company)")
-        .order("date_sent", { ascending: false }),
-      supabase.from("customers").select("id, first_name, last_name, company").order("first_name"),
-      // Your own price list, if you've set one up. Missing table -> null, and
-      // the picker quietly falls back to the standard service types.
-      supabase
-        .from("services")
-        .select("*")
-        .eq("active", true)
-        .order("sort_order", { ascending: true })
-        .order("name", { ascending: true }),
-    ]);
-
-  const pendingValue = (quotes || [])
-    .filter((q) => q.status === "Pending")
-    .reduce((sum, q) => sum + Number(q.amount || 0), 0);
+  const [{ data: quotes, error }, { data: customers }] = await Promise.all([
+    supabase
+      .from("quotes")
+      .select(
+        "*, customers(first_name, last_name, company, phone, street_address, city, state, zip)"
+      )
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("customers")
+      .select("id, first_name, last_name, company")
+      .order("first_name"),
+  ]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Quotes</h1>
-        <p className="text-slate-500 text-sm mt-1">Estimates sent to customers, before a job is booked.</p>
-      </div>
+      {error && (
+        <p className="text-red-600 text-sm">
+          Could not load estimates — {error.message}
+        </p>
+      )}
 
-      <div className="bg-white border border-slate-200 rounded-xl p-5 max-w-xs">
-        <div className="text-sm text-slate-500 font-medium">Pending Value</div>
-        <div className="text-2xl font-bold mt-2">${pendingValue.toFixed(2)}</div>
-      </div>
+      <EstimatesView
+        quotes={quotes || []}
+        services={SERVICE_TYPES}
+        cardAction={cardAction}
+        commentAction={addComment}
+        bulkAction={bulkAction}
+      />
 
-      <Card title="Send a Quote" id="add">
+      <Card title="Create an Estimate" id="add">
         <form action={addQuote} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
             <CustomerPicker customers={customers} required />
           </div>
-          <ServicePicker services={services || []} types={SERVICE_TYPES} />
-          <Select label="Status" name="status" options={QUOTE_STATUSES} />
+          <Select label="Service Type" name="service_type" options={SERVICE_TYPES} />
+          <Input label="Amount ($)" name="amount" type="number" step="0.01" required />
+          <Select label="Estimate Type" name="quote_type" options={QUOTE_TYPES} />
           <Input label="Follow-up Date" name="follow_up_date" type="date" />
+          <div className="md:col-span-1">
+            <Input label="Notes" name="notes" />
+          </div>
           <div className="md:col-span-3">
-            <Button type="submit">Add Quote</Button>
+            <Button type="submit">Add Estimate</Button>
           </div>
         </form>
-      </Card>
-
-      <Card title={`All Quotes (${quotes?.length ?? 0})`}>
-        {error && (
-          <p className="text-red-600 text-sm">
-            Could not load quotes yet — connect Supabase in .env.local to see real data here.
-          </p>
-        )}
-        {!error && (!quotes || quotes.length === 0) && (
-          <p className="text-slate-400 text-sm">No quotes yet — send your first one above.</p>
-        )}
-        {!error && quotes && quotes.length > 0 && (
-          <>
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-slate-400 text-xs uppercase border-b border-slate-100">
-                    <th className="py-2 pr-4">Sent</th>
-                    <th className="py-2 pr-4">Customer</th>
-                    <th className="py-2 pr-4">Service</th>
-                    <th className="py-2 pr-4 text-right">Amount</th>
-                    <th className="py-2 pr-4">Status</th>
-                    <th className="py-2 pr-4">Follow-up</th>
-                    <th className="py-2 pr-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quotes.map((q) => (
-                    <tr key={q.id} className="border-b border-slate-50">
-                      <td className="py-3 pr-4 text-slate-600">{q.date_sent}</td>
-                      <td className="py-3 pr-4 font-semibold">
-                        <Link href={`/quotes/${q.id}`} className="hover:text-orange-600">
-                          {q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
-                        </Link>
-                      </td>
-                      <td className="py-3 pr-4 text-slate-600">{q.service_type}</td>
-                      <td className="py-3 pr-4 text-right font-semibold">
-                        {q.amount != null ? `$${Number(q.amount).toFixed(2)}` : "—"}
-                      </td>
-                      <td className="py-3 pr-4">
-                        <StatusPill status={q.status} />
-                        <div className="text-[11px] text-slate-400 mt-1">{linkState(q)}</div>
-                      </td>
-                      <td className="py-3 pr-4 text-slate-600">{q.follow_up_date || "—"}</td>
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center justify-end gap-3">
-                          <Link
-                            href={`/quotes/${q.id}`}
-                            className="text-orange-600 hover:text-orange-700 text-xs font-semibold"
-                          >
-                            Send
-                          </Link>
-                          <Link
-                            href={`/quotes/${q.id}/edit`}
-                            className="text-slate-400 hover:text-orange-600 text-xs font-medium"
-                          >
-                            Edit
-                          </Link>
-                          <DeleteButton action={deleteQuote} id={q.id} label="quote" />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="md:hidden divide-y divide-slate-100">
-              {quotes.map((q) => (
-                <MobileCard
-                  key={q.id}
-                  title={
-                    <Link href={`/quotes/${q.id}`} className="hover:text-orange-600">
-                      {q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
-                    </Link>
-                  }
-                  subtitle={q.service_type}
-                  topRight={<StatusPill status={q.status} />}
-                >
-                  <CardField label="Estimate link" value={linkState(q)} />
-                  <CardField label="Sent" value={q.date_sent} />
-                  <CardField
-                    label="Amount"
-                    value={q.amount != null ? `$${Number(q.amount).toFixed(2)}` : null}
-                  />
-                  <CardField label="Follow-up" value={q.follow_up_date} />
-                  <div className="pt-1 flex items-center gap-4">
-                    <Link
-                      href={`/quotes/${q.id}`}
-                      className="text-orange-600 hover:text-orange-700 text-xs font-semibold"
-                    >
-                      Send
-                    </Link>
-                    <Link
-                      href={`/quotes/${q.id}/edit`}
-                      className="text-slate-400 hover:text-orange-600 text-xs font-medium"
-                    >
-                      Edit
-                    </Link>
-                    <DeleteButton action={deleteQuote} id={q.id} label="quote" />
-                  </div>
-                </MobileCard>
-              ))}
-            </div>
-          </>
-        )}
       </Card>
     </div>
   );
