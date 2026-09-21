@@ -67,7 +67,7 @@ export default async function QuoteDetailPage({ params }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: quote, error }, { data: events }] = await Promise.all([
+  const [{ data: quote, error }, { data: events }, { data: items }] = await Promise.all([
     supabase.from("quotes").select("*, customers(*)").eq("id", id).maybeSingle(),
     supabase
       .from("quote_events")
@@ -75,7 +75,14 @@ export default async function QuoteDetailPage({ params }) {
       .eq("quote_id", id)
       .order("created_at", { ascending: false })
       .limit(25),
+    supabase
+      .from("quote_items")
+      .select("*")
+      .eq("quote_id", id)
+      .order("sort_order", { ascending: true }),
   ]);
+
+  const lines = items || [];
 
   if (error || !quote) {
     return (
@@ -314,8 +321,27 @@ export default async function QuoteDetailPage({ params }) {
         </Card>
 
         <Card title="Estimate details">
+          {lines.length > 0 && (
+            <ul className="divide-y divide-slate-100 mb-3">
+              {lines.map((l) => (
+                <li key={l.id} className="py-2 flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium text-slate-800">{l.name}</span>
+                  <span className="font-semibold">${Number(l.amount || 0).toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="space-y-1">
-            <CardField label="Service" value={quote.service_type} />
+            {lines.length === 0 && <CardField label="Service" value={quote.service_type} />}
+            {Number(quote.discount) > 0 && (
+              <CardField label="Discount" value={`-$${Number(quote.discount).toFixed(2)}`} />
+            )}
+            {Number(quote.tax_rate) > 0 && (
+              <CardField label="Tax rate" value={`${quote.tax_rate}%`} />
+            )}
+            {Number(quote.deposit) > 0 && (
+              <CardField label="Deposit" value={`$${Number(quote.deposit).toFixed(2)}`} />
+            )}
             <CardField
               label="Amount"
               value={
