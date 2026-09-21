@@ -105,7 +105,7 @@ async function cardAction(formData) {
 
     await supabase
       .from("quotes")
-      .update({ scheduled_job_id: job.id, status: "Accepted" })
+      .update({ scheduled_job_id: job.id, status: "Accepted", declined_at: null })
       .eq("id", id);
 
     await supabase
@@ -167,7 +167,12 @@ async function cardAction(formData) {
   if (op === "decline") {
     await supabase
       .from("quotes")
-      .update({ status: "Declined", declined_at: new Date().toISOString() })
+      .update({
+        status: "Declined",
+        declined_at: new Date().toISOString(),
+        // An estimate can't be declined and paid at the same time.
+        paid_at: null,
+      })
       .eq("id", id);
 
     await supabase
@@ -181,7 +186,11 @@ async function cardAction(formData) {
   if (op === "paid") {
     await supabase
       .from("quotes")
-      .update({ paid_at: new Date().toISOString(), status: "Accepted" })
+      .update({
+        paid_at: new Date().toISOString(),
+        status: "Accepted",
+        declined_at: null,
+      })
       .eq("id", id);
 
     await supabase
