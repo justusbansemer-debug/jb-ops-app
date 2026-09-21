@@ -92,7 +92,7 @@ export default function Nav() {
 
   return (
     <>
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2">
           <button
             type="button"
