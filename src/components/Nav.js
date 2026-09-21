@@ -18,6 +18,7 @@ const TOP_LINKS = [
   { href: "/quotes", label: "Estimates" },
   { href: "/invoices", label: "Invoices" },
   { href: "/today", label: "Today" },
+  { href: "/calendar", label: "Calendar" },
   { href: "/menu", label: "Menu" },
 ];
 

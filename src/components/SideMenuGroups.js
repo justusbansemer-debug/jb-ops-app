@@ -33,6 +33,7 @@ const GROUPS = [
     items: [
       { href: "/today", label: "Today's jobs" },
       { href: "/jobs", label: "All jobs" },
+      { href: "/calendar", label: "Calendar" },
       { href: "/menu", label: "Measure a property" },
     ],
   },
