@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Select, Button } from "@/components/ui";
@@ -271,6 +272,16 @@ export default async function QuotesPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight">Estimates</h1>
+        <Link
+          href="/quotes/new"
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg whitespace-nowrap"
+        >
+          + New estimate
+        </Link>
+      </div>
+
       {error && (
         <p className="text-red-600 text-sm">
           Could not load estimates — {error.message}
@@ -285,7 +296,7 @@ export default async function QuotesPage() {
         bulkAction={bulkAction}
       />
 
-      <Card title="Create an Estimate" id="add">
+      <Card title="Quick estimate (one service)" id="add">
         <form action={addQuote} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="block text-sm">
             <span className="text-slate-600 font-medium">Customer</span>
