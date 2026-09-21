@@ -9,7 +9,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 // Pages a customer can open without an account. Right now that's the
 // estimate links you text or email out: /e/<token>.
 function isPublicPath(pathname) {
-  return pathname.startsWith("/e/");
+  // Estimate links a customer opens, and the calendar feed Google fetches.
+  // Both carry their own secret token in the URL.
+  return pathname.startsWith("/e/") || pathname.startsWith("/api/calendar/");
 }
 
 export async function updateSession(request) {
