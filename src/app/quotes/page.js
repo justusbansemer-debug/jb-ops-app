@@ -134,6 +134,25 @@ async function cardAction(formData) {
     return;
   }
 
+  if (op === "accept") {
+    // You marking it accepted yourself — the ones who say yes on the phone or
+    // at the door. Their own signed acceptance on the link is recorded
+    // separately, so this never overwrites a signature.
+    await supabase
+      .from("quotes")
+      .update({ status: "Accepted", declined_at: null })
+      .eq("id", id);
+
+    await supabase.from("quote_events").insert({
+      quote_id: id,
+      event_type: "accepted",
+      note: "Marked accepted in the app",
+    });
+
+    revalidatePath("/quotes");
+    return;
+  }
+
   if (op === "decline") {
     await supabase
       .from("quotes")
