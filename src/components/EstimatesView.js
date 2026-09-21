@@ -554,7 +554,7 @@ export default function EstimatesView({
   const [search, setSearch] = useState("");
   const [service, setService] = useState("All Services");
   const [range, setRange] = useState("Last 90 Days");
-  const [tab, setTab] = useState("Open");
+  const [tab, setTab] = useState(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState([]);
 
@@ -602,12 +602,19 @@ export default function EstimatesView({
     return base;
   }, [filtered]);
 
+  // Land on a tab that actually has something in it, until one is picked.
+  const autoTab = useMemo(() => {
+    const order = ["Open", "Draft", "Accepted", "Schedule", "Declined", "Paid", "Archive"];
+    return order.find((t) => summary[t].count > 0) || "Open";
+  }, [summary]);
+  const activeTab = tab ?? autoTab;
+
   const visible = useMemo(
     () =>
       filtered
-        .filter(({ q }) => tabOf(q) === tab)
+        .filter(({ q }) => tabOf(q) === activeTab)
         .sort((a, b) => (b.stamp?.getTime() || 0) - (a.stamp?.getTime() || 0)),
-    [filtered, tab]
+    [filtered, activeTab]
   );
 
   // Cards are grouped under a gray date band, newest day first.
@@ -693,7 +700,7 @@ export default function EstimatesView({
       <div className="border-b border-slate-200 overflow-x-auto">
         <div className="flex items-stretch gap-6 min-w-max px-1">
           {TABS.map((t) => {
-            const active = t === tab;
+            const active = t === activeTab;
             return (
               <button
                 key={t}
@@ -736,14 +743,14 @@ export default function EstimatesView({
               onClick={() => {
                 const fd = new FormData();
                 fd.set("ids", selected.join(","));
-                fd.set("op", tab === "Archive" ? "unarchive" : "archive");
+                fd.set("op", activeTab === "Archive" ? "unarchive" : "archive");
                 bulkAction(fd);
                 setSelected([]);
                 setSelectMode(false);
               }}
               className="bg-slate-800 hover:bg-slate-900 disabled:opacity-40 text-white text-sm font-semibold px-3 py-2 rounded-lg"
             >
-              {tab === "Archive" ? "Move out of Archive" : "Archive selected"}
+              {activeTab === "Archive" ? "Move out of Archive" : "Archive selected"}
             </button>
             <button
               type="button"
@@ -762,7 +769,7 @@ export default function EstimatesView({
       {/* cards */}
       {groups.length === 0 && (
         <p className="text-slate-400 text-sm py-8 text-center">
-          Nothing in {tab} for this filter.
+          Nothing in {activeTab} for this filter.
         </p>
       )}
 
