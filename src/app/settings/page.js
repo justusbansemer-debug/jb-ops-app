@@ -12,6 +12,11 @@ const ITEMS = [
     sub: "Write the agreements you attach to an estimate — customers sign them on the link",
   },
   {
+    href: "/settings/calendar",
+    title: "Google Calendar",
+    sub: "Subscribe once — every job you schedule lands on your calendar",
+  },
+  {
     href: "/settings/business",
     title: "Business info",
     sub: "Your name, phone, and email as customers see them on an estimate",
