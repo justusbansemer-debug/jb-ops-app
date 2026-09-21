@@ -352,6 +352,7 @@ function ActionButton({ action, quoteId, op, tone, icon, label }) {
     amber: "bg-amber-100 hover:bg-amber-200 text-amber-900",
     red: "bg-red-200 hover:bg-red-300 text-red-900",
     green: "bg-green-200 hover:bg-green-300 text-green-900",
+    violet: "bg-violet-100 hover:bg-violet-200 text-violet-900",
   };
   return (
     <form action={action} className="flex-1">
@@ -381,6 +382,13 @@ function EstimateCard({ q, stamp, actionRef, commentAction, onArchive, selectMod
   const canSchedule = !q.scheduled_job_id && !q.archived_at;
   const canDecline = tab !== "Declined" && !q.archived_at;
   const canPaid = !q.paid_at && !q.archived_at;
+  // Mark it accepted yourself — for the ones who say yes on the phone or at
+  // the door instead of tapping Accept on the link.
+  const canAccept =
+    !q.archived_at &&
+    !q.paid_at &&
+    q.status !== "Accepted" &&
+    q.customer_response !== "accepted";
 
   return (
     <div
@@ -496,6 +504,16 @@ function EstimateCard({ q, stamp, actionRef, commentAction, onArchive, selectMod
 
         {/* colored actions */}
         <div className="flex items-stretch gap-2 flex-wrap">
+          {canAccept && (
+            <ActionButton
+              action={actionRef}
+              quoteId={q.id}
+              op="accept"
+              tone="violet"
+              icon={I.check}
+              label="Accepted"
+            />
+          )}
           {canSchedule && (
             <ActionButton
               action={actionRef}
