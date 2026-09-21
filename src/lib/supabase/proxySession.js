@@ -6,7 +6,19 @@ import { NextResponse } from "next/server";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 
+// Pages a customer can open without an account. Right now that's the
+// estimate links you text or email out: /e/<token>.
+function isPublicPath(pathname) {
+  return pathname.startsWith("/e/");
+}
+
 export async function updateSession(request) {
+  // Customers opening an estimate link are not logged in and never will be —
+  // let them straight through before any login check runs.
+  if (isPublicPath(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
