@@ -21,9 +21,14 @@ const RANGES = [
 // estimate stays under Paid even though it was also once accepted.
 function tabOf(q) {
   if (q.archived_at) return "Archive";
+  // Declined outranks Paid and Schedule: pressing Decline is a decision about
+  // the estimate itself, so it has to win even when the estimate was already
+  // scheduled or marked paid. Scheduling, accepting or marking it paid again
+  // clears declined_at, so the most recent decision is always the one shown.
+  if (q.declined_at || q.customer_response === "declined" || q.status === "Declined")
+    return "Declined";
   if (q.paid_at) return "Paid";
   if (q.scheduled_job_id) return "Schedule";
-  if (q.customer_response === "declined" || q.status === "Declined") return "Declined";
   if (q.customer_response === "accepted" || q.status === "Accepted") return "Accepted";
   if (!q.sent_at) return "Draft";
   return "Open";
