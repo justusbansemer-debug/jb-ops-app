@@ -12,6 +12,19 @@ const SERVICE_TYPES = [
 ];
 const QUOTE_STATUSES = ["Pending", "Accepted", "Declined", "Expired"];
 
+// A one-line read on the estimate link: sent? opened? answered?
+function linkState(q) {
+  if (q.customer_response === "accepted") return "Accepted by customer";
+  if (q.customer_response === "declined") return "Declined by customer";
+  if (q.customer_response === "change_requested") return "Change requested";
+  if (q.first_viewed_at) {
+    const n = Number(q.view_count || 1);
+    return n > 1 ? `Opened ${n}x` : "Opened";
+  }
+  if (q.sent_at) return "Sent, not opened yet";
+  return "Not sent yet";
+}
+
 async function addQuote(formData) {
   "use server";
 
@@ -123,7 +136,9 @@ export default async function QuotesPage() {
                     <tr key={q.id} className="border-b border-slate-50">
                       <td className="py-3 pr-4 text-slate-600">{q.date_sent}</td>
                       <td className="py-3 pr-4 font-semibold">
-                        {q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
+                        <Link href={`/quotes/${q.id}`} className="hover:text-orange-600">
+                          {q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
+                        </Link>
                       </td>
                       <td className="py-3 pr-4 text-slate-600">{q.service_type}</td>
                       <td className="py-3 pr-4 text-right font-semibold">
@@ -131,10 +146,17 @@ export default async function QuotesPage() {
                       </td>
                       <td className="py-3 pr-4">
                         <StatusPill status={q.status} />
+                        <div className="text-[11px] text-slate-400 mt-1">{linkState(q)}</div>
                       </td>
                       <td className="py-3 pr-4 text-slate-600">{q.follow_up_date || "—"}</td>
                       <td className="py-3 pr-4">
                         <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/quotes/${q.id}`}
+                            className="text-orange-600 hover:text-orange-700 text-xs font-semibold"
+                          >
+                            Send
+                          </Link>
                           <Link
                             href={`/quotes/${q.id}/edit`}
                             className="text-slate-400 hover:text-orange-600 text-xs font-medium"
@@ -154,10 +176,15 @@ export default async function QuotesPage() {
               {quotes.map((q) => (
                 <MobileCard
                   key={q.id}
-                  title={q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
+                  title={
+                    <Link href={`/quotes/${q.id}`} className="hover:text-orange-600">
+                      {q.customers ? `${q.customers.first_name} ${q.customers.last_name}` : "—"}
+                    </Link>
+                  }
                   subtitle={q.service_type}
                   topRight={<StatusPill status={q.status} />}
                 >
+                  <CardField label="Estimate link" value={linkState(q)} />
                   <CardField label="Sent" value={q.date_sent} />
                   <CardField
                     label="Amount"
@@ -165,6 +192,12 @@ export default async function QuotesPage() {
                   />
                   <CardField label="Follow-up" value={q.follow_up_date} />
                   <div className="pt-1 flex items-center gap-4">
+                    <Link
+                      href={`/quotes/${q.id}`}
+                      className="text-orange-600 hover:text-orange-700 text-xs font-semibold"
+                    >
+                      Send
+                    </Link>
                     <Link
                       href={`/quotes/${q.id}/edit`}
                       className="text-slate-400 hover:text-orange-600 text-xs font-medium"
