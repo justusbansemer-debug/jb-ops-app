@@ -71,15 +71,26 @@ async function cardAction(formData) {
   }
 
   if (op === "schedule") {
+    // When and how long, as picked on the card. The browser already turned
+    // the chosen local time into a proper timestamp.
+    const picked = String(formData.get("scheduled_at") || "");
+    const hours = Number(formData.get("duration_hours"));
+    const scheduledAt =
+      picked ||
+      (quote.follow_up_date
+        ? new Date(`${quote.follow_up_date}T09:00:00`).toISOString()
+        : new Date().toISOString());
+    const durationMinutes =
+      Number.isFinite(hours) && hours > 0 ? Math.round(hours * 60) : 120;
+
     // Turn the estimate into a scheduled job and remember which job it became.
     const { data: job, error } = await supabase
       .from("jobs")
       .insert({
         customer_id: quote.customer_id,
         service_type: quote.service_type,
-        scheduled_at: quote.follow_up_date
-          ? new Date(`${quote.follow_up_date}T09:00:00`).toISOString()
-          : new Date().toISOString(),
+        scheduled_at: scheduledAt,
+        duration_minutes: durationMinutes,
         status: "Scheduled",
         price: quote.amount,
         notes: quote.notes,
