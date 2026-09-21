@@ -151,6 +151,63 @@ export default async function QuoteDetailPage({ params }) {
         </div>
       )}
 
+      {/* The signed agreement — your record if there's ever a dispute */}
+      {quote.signed_at && (
+        <Card title="Signed agreement">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Signed by
+              </p>
+              <p className="font-semibold mt-1">{quote.signed_name || "—"}</p>
+              <p className="text-sm text-slate-500">{when(quote.signed_at)}</p>
+            </div>
+            {quote.signature_data && (
+              <div className="border border-slate-200 rounded-lg bg-white p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={quote.signature_data}
+                  alt={`Signature of ${quote.signed_name || "customer"}`}
+                  className="h-20 w-auto"
+                />
+              </div>
+            )}
+          </div>
+          {quote.signed_user_agent && (
+            <p className="text-xs text-slate-400 mt-3 break-words">
+              Signed from: {quote.signed_user_agent}
+            </p>
+          )}
+          {quote.terms_text && (
+            <details className="mt-4 pt-4 border-t border-slate-100">
+              <summary className="text-xs font-medium text-slate-400 hover:text-orange-600 cursor-pointer">
+                Read the exact terms they agreed to
+              </summary>
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap mt-3">
+                {quote.terms_text}
+              </p>
+            </details>
+          )}
+        </Card>
+      )}
+
+      {/* Terms attached but not signed yet */}
+      {!quote.signed_at && quote.terms_text && (
+        <Card title="Terms attached">
+          <p className="text-sm text-slate-500">
+            They&apos;ll read this and sign it before Accept goes through.
+          </p>
+          <details className="mt-3">
+            <summary className="text-xs font-medium text-slate-400 hover:text-orange-600 cursor-pointer">
+              Read the terms on this estimate
+            </summary>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap mt-3">
+              {quote.terms_text}
+            </p>
+          </details>
+        </Card>
+      )}
+
       <Card title="Send this estimate">
         <ShareEstimate
           url={shareUrl}
