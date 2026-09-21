@@ -55,3 +55,42 @@ body {
 body.no-scroll {
   overflow: hidden;
 }
+
+/* ---------------------------------------------------------------------------
+   Phone behaviour — aimed at a big iPhone (Pro Max), but good everywhere.
+--------------------------------------------------------------------------- */
+
+/* Nothing should ever be able to scroll sideways. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  /* No grey flash on tap, and no rubber-banding the whole page behind the
+     fixed bars — but pull-to-refresh still works. */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+  /* Safari sizes text up in landscape without this. */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* iOS zooms the whole page in when you focus a field whose text is under
+   16px. Bumping form text to 16px on phones stops that jump. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Comfortable thumb targets for the small text buttons and links. */
+@media (max-width: 767px) {
+  button,
+  a[href],
+  summary {
+    touch-action: manipulation;
+  }
+}
