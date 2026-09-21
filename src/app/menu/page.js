@@ -13,6 +13,7 @@ const SECTIONS = [
       { href: "/", label: "Dashboard", sub: "Sales and activity" },
       { href: "/today", label: "Today", sub: "Jobs on deck" },
       { href: "/jobs", label: "Jobs", sub: "Schedule and status" },
+      { href: "/measure", label: "Measure a property", sub: "Satellite and lot size" },
     ],
   },
   {
