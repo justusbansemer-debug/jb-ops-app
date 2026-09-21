@@ -46,7 +46,7 @@ const ACTIONS = [
     icon: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z" /><path d="M9 8h6M9 12h6M9 16h4" /></>,
   },
   {
-    href: "/menu",
+    href: "/measure",
     label: "Measure a Property",
     icon: <><path d="m9 3 6 2 6-2v16l-6 2-6-2-6 2V5Z" /><path d="M9 3v16M15 5v16" /></>,
   },
