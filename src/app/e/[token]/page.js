@@ -160,7 +160,11 @@ export default async function PublicEstimatePage({ params }) {
       </div>
 
       {/* Accept / Request a change / Decline */}
-      <EstimateActions token={token} initialResponse={q.customer_response} />
+      <EstimateActions
+        token={token}
+        initialResponse={q.customer_response}
+        termsText={q.terms_text}
+      />
 
       {/* How to reach you */}
       <div className="text-center text-sm text-slate-500 mt-6">
