@@ -369,6 +369,100 @@ function ActionButton({ action, quoteId, op, tone, icon, label }) {
   );
 }
 
+// Schedule asks when and for how long, instead of guessing. The hidden
+// scheduled_at is built in the browser, so the time you pick is the time in
+// YOUR timezone — not the server's.
+function ScheduleAction({ action, quote }) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState(
+    quote.follow_up_date || new Date().toLocaleDateString("en-CA")
+  );
+  const [time, setTime] = useState("09:00");
+
+  let iso = "";
+  const parsed = new Date(`${date}T${time}`);
+  if (!Number.isNaN(parsed.getTime())) iso = parsed.toISOString();
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition bg-sky-100 hover:bg-sky-200 text-sky-900"
+      >
+        <Icon path={I.calendar} className="w-4 h-4" />
+        Schedule
+      </button>
+    );
+  }
+
+  const field =
+    "mt-1 w-full border border-slate-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400";
+
+  return (
+    <form
+      action={action}
+      className="w-full border border-sky-200 bg-sky-50 rounded-lg p-3 space-y-3"
+    >
+      <input type="hidden" name="quote_id" value={quote.id} />
+      <input type="hidden" name="op" value="schedule" />
+      <input type="hidden" name="scheduled_at" value={iso} />
+
+      <div className="grid grid-cols-3 gap-2">
+        <label className="block text-xs">
+          <span className="text-slate-600 font-medium">Date</span>
+          <input
+            type="date"
+            required
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className={field}
+          />
+        </label>
+        <label className="block text-xs">
+          <span className="text-slate-600 font-medium">Start</span>
+          <input
+            type="time"
+            required
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className={field}
+          />
+        </label>
+        <label className="block text-xs">
+          <span className="text-slate-600 font-medium">Hours</span>
+          <input
+            type="number"
+            name="duration_hours"
+            step="0.25"
+            min="0.25"
+            defaultValue="2"
+            required
+            className={field}
+          />
+        </label>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={!iso}
+          className="flex-1 rounded-lg py-2.5 text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-40"
+        >
+          Add to schedule
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="px-4 py-2.5 text-sm font-medium text-slate-600"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 /* ----------------------------------------------------------------- card */
 
 function EstimateCard({ q, stamp, actionRef, commentAction, onArchive, selectMode, selected, onToggle }) {
@@ -514,16 +608,7 @@ function EstimateCard({ q, stamp, actionRef, commentAction, onArchive, selectMod
               label="Accepted"
             />
           )}
-          {canSchedule && (
-            <ActionButton
-              action={actionRef}
-              quoteId={q.id}
-              op="schedule"
-              tone="blue"
-              icon={I.calendar}
-              label="Schedule"
-            />
-          )}
+          {canSchedule && <ScheduleAction action={actionRef} quote={q} />}
           {canInvoice && (
             <ActionButton
               action={actionRef}
