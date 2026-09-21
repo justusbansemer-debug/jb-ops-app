@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, Input, Select, Button, StatusPill, MobileCard, CardField } from "@/components/ui";
 import DeleteButton from "@/components/DeleteButton";
 import CustomerPicker from "@/components/CustomerPicker";
+import ServicePicker from "@/components/ServicePicker";
 
 const SERVICE_TYPES = [
   "Soft Washing", "House Washing", "Roof Washing", "Driveway Cleaning",
@@ -64,13 +65,22 @@ async function deleteQuote(id) {
 export default async function QuotesPage() {
   const supabase = await createClient();
 
-  const [{ data: quotes, error }, { data: customers }] = await Promise.all([
-    supabase
-      .from("quotes")
-      .select("*, customers(first_name, last_name, company)")
-      .order("date_sent", { ascending: false }),
-    supabase.from("customers").select("id, first_name, last_name, company").order("first_name"),
-  ]);
+  const [{ data: quotes, error }, { data: customers }, { data: services }] =
+    await Promise.all([
+      supabase
+        .from("quotes")
+        .select("*, customers(first_name, last_name, company)")
+        .order("date_sent", { ascending: false }),
+      supabase.from("customers").select("id, first_name, last_name, company").order("first_name"),
+      // Your own price list, if you've set one up. Missing table -> null, and
+      // the picker quietly falls back to the standard service types.
+      supabase
+        .from("services")
+        .select("*")
+        .eq("active", true)
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true }),
+    ]);
 
   const pendingValue = (quotes || [])
     .filter((q) => q.status === "Pending")
@@ -94,13 +104,9 @@ export default async function QuotesPage() {
             <span className="text-slate-600 font-medium">Customer</span>
             <CustomerPicker customers={customers} required />
           </div>
-          <Select label="Service Type" name="service_type" options={SERVICE_TYPES} />
-          <Input label="Amount ($)" name="amount" type="number" step="0.01" required />
+          <ServicePicker services={services || []} types={SERVICE_TYPES} />
           <Select label="Status" name="status" options={QUOTE_STATUSES} />
           <Input label="Follow-up Date" name="follow_up_date" type="date" />
-          <div className="md:col-span-3">
-            <Input label="Notes" name="notes" />
-          </div>
           <div className="md:col-span-3">
             <Button type="submit">Add Quote</Button>
           </div>
