@@ -85,6 +85,7 @@ export default async function PublicEstimatePage({ params }) {
   if (error || !data || !data.quote) return <NotFound biz={data?.business} />;
 
   const q = data.quote;
+  const items = Array.isArray(data.items) ? data.items : [];
   const customer = data.customer || {};
   const biz = data.business || {};
 
@@ -123,6 +124,45 @@ export default async function PublicEstimatePage({ params }) {
         </div>
 
         <div className="divide-y divide-slate-100">
+          {items.length > 0 && (
+            <div className="px-5 py-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                What&apos;s included
+              </p>
+              <ul className="mt-2 divide-y divide-slate-100">
+                {items.map((it) => (
+                  <li key={it.id} className="py-2.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-sm font-semibold">{it.name}</span>
+                      <span className="text-sm font-semibold">{money(it.amount)}</span>
+                    </div>
+                    {it.notes && (
+                      <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap">{it.notes}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {Number(q.discount) > 0 && (
+                <p className="flex justify-between text-sm text-slate-600 mt-2">
+                  <span>Discount</span>
+                  <span>-{money(q.discount)}</span>
+                </p>
+              )}
+              {Number(q.tax_rate) > 0 && (
+                <p className="flex justify-between text-sm text-slate-600 mt-1">
+                  <span>Tax ({q.tax_rate}%)</span>
+                  <span>included above</span>
+                </p>
+              )}
+              {Number(q.deposit) > 0 && (
+                <p className="flex justify-between text-sm text-slate-600 mt-1">
+                  <span>Deposit to book</span>
+                  <span>{money(q.deposit)}</span>
+                </p>
+              )}
+            </div>
+          )}
+
           {(customerName || address) && (
             <div className="px-5 py-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
