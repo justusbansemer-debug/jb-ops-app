@@ -69,7 +69,7 @@ function insightFor(pct, total, label) {
 }
 
 const QUICK_ACTIONS = [
-  { href: "/quotes#add", label: "New estimate", sub: "Price a job" },
+  { href: "/quotes/new", label: "New estimate", sub: "Price a job" },
   { href: "/today", label: "Today's jobs", sub: "What's on deck" },
   { href: "/customers#add", label: "New customer", sub: "Add a contact" },
   { href: "/invoices#add", label: "New invoice", sub: "Get paid" },
