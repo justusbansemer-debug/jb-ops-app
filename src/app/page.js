@@ -3,11 +3,37 @@ import { createClient } from "@/lib/supabase/server";
 import { StatCard, Card, StatusPill } from "@/components/ui";
 import { RevenueFlowChart, OutstandingInvoicesPanel } from "@/components/DashboardCharts";
 
+// --- Recent Activity: what customers did with the estimate links you sent ---
+const ACTIVITY = {
+  viewed: { verb: "opened your estimate", dot: "bg-blue-500" },
+  accepted: { verb: "accepted your estimate", dot: "bg-green-600" },
+  declined: { verb: "declined your estimate", dot: "bg-slate-400" },
+  change_requested: { verb: "asked for a change", dot: "bg-amber-500" },
+};
+
+function timeAgo(v) {
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "";
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const [{ data: customers }, { data: jobs }, { data: quotes }, { data: invoices }] =
-    await Promise.all([
+  const [
+    { data: customers },
+    { data: jobs },
+    { data: quotes },
+    { data: invoices },
+    { data: activity },
+  ] = await Promise.all([
       supabase.from("customers").select("id"),
       supabase
         .from("jobs")
@@ -19,6 +45,13 @@ export default async function DashboardPage() {
         .from("invoices")
         .select("id, amount, amount_paid, invoice_date, customers(first_name, last_name, company)")
         .order("invoice_date", { ascending: true }),
+      // What customers have done with the estimate links you sent them.
+      // Missing table (migration not run yet) -> null, handled below.
+      supabase
+        .from("quote_events")
+        .select("*, quotes(id, service_type, customers(first_name, last_name))")
+        .order("created_at", { ascending: false })
+        .limit(8),
     ]);
 
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
@@ -178,6 +211,55 @@ export default async function DashboardPage() {
         <StatCard label="Customers" value={customers?.length ?? 0} />
         <StatCard label="Pending Quote Value" value={`$${pendingQuotesValue.toFixed(2)}`} />
       </div>
+
+      <Card
+        title="Recent Activity"
+        action={
+          <Link href="/quotes" className="text-sm font-semibold text-orange-600 hover:text-orange-700">
+            View all estimates
+          </Link>
+        }
+      >
+        {(!activity || activity.length === 0) && (
+          <p className="text-slate-400 text-sm">
+            Nothing yet — this fills in as customers open and answer the
+            estimate links you send.
+          </p>
+        )}
+        {activity && activity.length > 0 && (
+          <ul className="divide-y divide-slate-100">
+            {activity.map((e) => {
+              const meta = ACTIVITY[e.event_type] || { verb: e.event_type, dot: "bg-slate-300" };
+              const c = e.quotes?.customers;
+              const who = c ? `${c.first_name} ${c.last_name}` : "Someone";
+              return (
+                <li key={e.id} className="py-3 flex items-start gap-3 text-sm">
+                  <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${meta.dot}`} />
+                  <div className="min-w-0 flex-1">
+                    <div>
+                      {e.quotes ? (
+                        <Link href={`/quotes/${e.quotes.id}`} className="font-semibold hover:text-orange-600">
+                          {who}
+                        </Link>
+                      ) : (
+                        <span className="font-semibold">{who}</span>
+                      )}{" "}
+                      <span className="text-slate-500">{meta.verb}</span>
+                      {e.quotes?.service_type && (
+                        <span className="text-slate-400"> · {e.quotes.service_type}</span>
+                      )}
+                    </div>
+                    {e.note && (
+                      <p className="text-slate-600 text-xs mt-1 whitespace-pre-wrap">{e.note}</p>
+                    )}
+                  </div>
+                  <span className="text-xs text-slate-400 shrink-0">{timeAgo(e.created_at)}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Card>
 
       <Card
         title="Upcoming Jobs"
