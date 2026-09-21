@@ -7,6 +7,11 @@ const ITEMS = [
     sub: "Build your own price list — you set up each one exactly how you want it",
   },
   {
+    href: "/settings/terms",
+    title: "Terms & conditions",
+    sub: "Write the agreements you attach to an estimate — customers sign them on the link",
+  },
+  {
     href: "/settings/business",
     title: "Business info",
     sub: "Your name, phone, and email as customers see them on an estimate",
