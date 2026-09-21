@@ -16,7 +16,22 @@ async function addQuote(formData) {
 
   const supabase = await createClient();
 
+  // Copy the wording onto the estimate now, so editing the template later
+  // never changes an agreement someone has already signed.
+  const termsId = String(formData.get("terms_id") || "") || null;
+  let termsText = null;
+  if (termsId) {
+    const { data: t } = await supabase
+      .from("terms_templates")
+      .select("body")
+      .eq("id", termsId)
+      .maybeSingle();
+    termsText = t?.body || null;
+  }
+
   const { error } = await supabase.from("quotes").insert({
+    terms_id: termsId,
+    terms_text: termsText,
     customer_id: String(formData.get("customer_id") || "") || null,
     service_type: String(formData.get("service_type") || ""),
     quote_type: String(formData.get("quote_type") || "Standard"),
@@ -195,7 +210,8 @@ async function bulkAction(formData) {
 export default async function QuotesPage() {
   const supabase = await createClient();
 
-  const [{ data: quotes, error }, { data: customers }] = await Promise.all([
+  const [{ data: quotes, error }, { data: customers }, { data: termsTemplates }] =
+    await Promise.all([
     supabase
       .from("quotes")
       .select(
@@ -206,6 +222,12 @@ export default async function QuotesPage() {
       .from("customers")
       .select("id, first_name, last_name, company")
       .order("first_name"),
+    supabase
+      .from("terms_templates")
+      .select("id, name, is_default")
+      .eq("active", true)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true }),
   ]);
 
   return (
@@ -234,6 +256,26 @@ export default async function QuotesPage() {
           <Input label="Amount ($)" name="amount" type="number" step="0.01" required />
           <Select label="Estimate Type" name="quote_type" options={QUOTE_TYPES} />
           <Input label="Follow-up Date" name="follow_up_date" type="date" />
+          <label className="block text-sm">
+            <span className="text-slate-600 font-medium">Terms &amp; conditions</span>
+            <select
+              name="terms_id"
+              defaultValue={(termsTemplates || []).find((t) => t.is_default)?.id || ""}
+              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+            >
+              <option value="">No terms — accept with one tap</option>
+              {(termsTemplates || []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <span className="block text-xs text-slate-400 mt-1">
+              {termsTemplates && termsTemplates.length > 0
+                ? "They read it and sign before Accept goes through."
+                : "Write your terms in Settings → Terms & conditions."}
+            </span>
+          </label>
           <div className="md:col-span-1">
             <Input label="Notes" name="notes" />
           </div>
