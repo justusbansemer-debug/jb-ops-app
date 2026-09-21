@@ -31,7 +31,7 @@ const ACTIONS = [
     icon: <><circle cx="12" cy="8" r="3.2" /><path d="M5 20a7 7 0 0 1 14 0" /></>,
   },
   {
-    href: "/quotes#add",
+    href: "/quotes/new",
     label: "New Estimate",
     icon: <><path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" /><path d="M14 3v5h5" /><path d="M8 13h8M8 17h5" /></>,
   },
@@ -46,7 +46,7 @@ const ACTIONS = [
     icon: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z" /><path d="M9 8h6M9 12h6M9 16h4" /></>,
   },
   {
-    href: "/measure",
+    href: "/menu",
     label: "Measure a Property",
     icon: <><path d="m9 3 6 2 6-2v16l-6 2-6-2-6 2V5Z" /><path d="M9 3v16M15 5v16" /></>,
   },

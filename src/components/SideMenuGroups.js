@@ -11,7 +11,7 @@ const GROUPS = [
     icon: ICONS.plus,
     accent: true,
     items: [
-      { href: "/quotes#add", label: "New estimate" },
+      { href: "/quotes/new", label: "New estimate" },
       { href: "/customers#add", label: "New customer" },
       { href: "/jobs#add", label: "New job" },
       { href: "/invoices#add", label: "New invoice" },
@@ -34,7 +34,7 @@ const GROUPS = [
       { href: "/today", label: "Today's jobs" },
       { href: "/jobs", label: "All jobs" },
       { href: "/calendar", label: "Calendar" },
-      { href: "/measure", label: "Measure a property" },
+      { href: "/menu", label: "Measure a property" },
     ],
   },
   {
